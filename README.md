@@ -11,34 +11,45 @@ THIS PERFORMANCE NUMBER IS NOT AIMING TO SHARE WITH CUSTOMER NOR REPRESENT FORMA
 This is example repo for the APG Pattern: High Concurrency Computing Using Amazon EventBridge with AWS Step Functions APG Pattern Example
 
 ## Overview
-Enterprise customers are migrating/modernizing existing workloads to serverless architecture to enable scalability and reduce maintenance cost. One of workloads is a point - in - time batch processing with state machine monitor and audibility: one request triggers a step, the step processes through the request and schedule large number of concurrencies as needed, next step will be triggered once all concurrency processes completed, and entire system control in a state machine mechanism for process audit/monitoring.
+Enterprise customers migrate/modernize existing workloads to serverless architectures to enable higher scalability and reduce TCO. 
 
-One approaches toward this problem is to leverage AWS Step Function to govern the over process.
+For workloads that requires an orchestration/workflow, with a state machine for processing records, [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) is a good fit.
 
-AWS Step Function provides state machine controls mechanism out of box (i.e. step definitions, chaining of multiple steps for form one large state, and retry logics). It also provides native integrations with frequent used AWS computing services (AWS Lambda/AWS ECS/AWS Batch) and HTTP request supports for other services.
+If the states need to be processed in a concurrent way with in a workflow, [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) supports processing the states in parallel.
 
-This repo goes through some common approaches toward this workload with AWS Step Function with other AWS services and provides recommended architecture. It also discusses advantages/disadvantages of these different approaches.
+However, there is a limitation on the number of records that can be processed concurrently.
+
+This repo goes through some known approaches toward this use cases with [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html). It discusses advantages/disadvantages of these different approaches and suggests the recommended architecture.
 
 
 ## Customer Challenges
-Customer is satisfied with how AWS Step Function simplified the overall state managements (out of box audit/retry/integration with computing AWS services) in serverless fashion. But they express challenges with following:
+Customers are facing the following challenges when using AWS Step Functions to implement this batch workload use case:
 
-1. Performance when the workflow involved high concurrency computing (100+ to 1000+) steps with Step Function’s out of box concurrency step definition (Map Iterator or Parallel). 
+1. Step Function’s concurrent step definition (Map Iterator or Parallel) does not process more than 40  requests concurrently , regardless of the number of requests in the Map. 
 
-At time of this written, there is an upper bound limit of 40 concurrency within the Map Iterator*. When input requests are higher than this number, Map Iterator step will process in batch of 40: for example, a 200 items request will be processed in 5 batch, each batch with 40 concurrency requests.
+      At this time, [there is an upper bound limit of 40 concurrency within the Map Iterator*](https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html). 
 
-However, customer mentioned 40 requests are too small and want to increase the concurrency amount as much as possible. They did change the concurrency number in map iterator but these attempts still not achieved customer’s desired performance (customer expressed it is “multitude slower“ when compare to lower concurrency).
+      When concurrent input requests exceed this number, the Map Iterator step will process in batch of 40.
 
-This article will explore through some common suggestions such as Map in Map (Map Iterator Step within Map Iterator Step), Parallel with Map (fixed amount of Map Iterator in a Parallel Step) and other approaches.
+      For example, when there are 200 items in the map, the requests will be processed in 5 batches, each batch with 40 concurrency requests. 
 
-2. Explore and integrate different computation targets as needed while keep the AWS Step Function manageable
+      If the use case needs more records to be processed concurrently (1000+ items) - each request takes about 5 seconds to execute-
 
-One popular computation serverless is AWS Lambda. But as customer build into each Lambda function to be much more efficiency to work around #1, they faced challenged in managing growing conditions within AWS Step Function: data type 1 goes to Lambda 1 up to data type N to Lambda N.
+      With a map iterator, as described above with 40 request in each batch,  takes total 255 seconds (refer to Pattern Performance Comparison section below for Map Iterator). 
 
-3. The overhead of adding other services if want to solve #1/#2
+      This is 5% of 5000 seconds (when executed sequentially - 5 * 1000). 
 
-Customer is skeptical whatever there will be performance overhead of introducing other AWS services to solve #1/#2 and is why lean toward to solve everything within AWS Step Functions.
+      Where as, the expectation is to complete the execution with in 100 seconds (2% of 5000 seconds).
 
+2.  Explore and integrate different computation targets as needed while keeping the step function manageable.
+
+      Customers want to explore different computation targets other than [AWS Lambda](https://aws.amazon.com/lambda/) (or experiment with different Lambda functions) while the step function is being developed.
+
+      These changes in data routing logic make the entire step function difficult to manage. Customers want a mechanism to allow their developers to develop and to change computing targets without modifying already approved business logic in step function.
+
+3.  Concern of adding services to solve #1 and #2.
+
+      Introducing a new service to decouple the process, increases the complexity.
 
 ## Customer Requirements
 1. One trigger request will result in large concurrency calculations in one step
@@ -48,14 +59,16 @@ Customer is skeptical whatever there will be performance overhead of introducing
 5. This entire flow need to be monitorable/auditable with retry logic/error handling
 
 
-## Assumptions
-- Computing lambda process can horizontal scale without bottleneck by data source
-- Each computing lambda process is independent and not waiting for result from each other
-- Need to adopt to a unknown growth data input
+## Prerequisites 
+For the solution itself: 
+- Computing process can be scaled horizontally,  extra load will be generated to the target service / data source. The target server/data source should be able to handle the increased service requests.
+- The execution time is similar for each run, independent of how many parallel executions are triggered (i.e. 5 concurrency runs, each process takes 5 seconds to complete , with 10 concurrency runs, each process will still take 5 seconds).
+- Each computing process is independent and is not waiting for result from each other.
+- Users should be familiar with the implementation of an efficient global counter/lock.
 
 
 ## Limitations 
-- Patterns described in this comparison not suitable if record processing order must be guaranteed (i.e. the process must be record 1, record 2 and so on) as the goal is aiming to push higher concurrency rather than preserve order.
+- Patterns in this repo are not suitable, if record processing order must be guaranteed (i.e. the process must be record 1, record 2 and so on) as this pattern is aimed at higher concurrency.
 - It is acknowledged there are indeed efficient approaches such as build everything from scratches with EC2 and adjust toward this one specific use case, but this article will guide toward AWS Step Functions and other managed AWS services to fulfill customer’s requirements (i.e. serverless/fully managed services and out of box audit/monitor ability)
 - In certain approaches, there will be overhead for small loads (for requests under 40 concurrency)
 
