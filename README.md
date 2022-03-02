@@ -11,11 +11,7 @@ THIS PERFORMANCE NUMBER IS NOT AIMING TO SHARE WITH CUSTOMER NOR REPRESENT FORMA
 This is example repo for the APG Pattern: High Concurrency Computing Using Amazon EventBridge with AWS Step Functions APG Pattern Example
 
 ## Overview
-Enterprise customers migrate/modernize existing workloads to serverless architectures to enable higher scalability and reduce TCO. 
-
-For workloads that requires an orchestration/workflow, with a state machine for processing records, [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) is a good fit.
-
-If the states need to be processed in a concurrent way with in a workflow, [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) supports processing the states in parallel.
+Enterprise customers migrate or modernize existing workloads to serverless architectures,  for higher scalability and reduce Total Cost of Ownership(TCO). [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) is a good fit for the use cases that requires an orchestration or workflow. [AWS Step Functions](https://docs.aws.amazon.com/step-functions/latest/dg/welcome.html) supports processing the states in parallel.
 
 However, there is a limitation on the number of records that can be processed concurrently.
 

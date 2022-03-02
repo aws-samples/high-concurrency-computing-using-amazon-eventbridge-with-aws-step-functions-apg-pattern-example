@@ -94,17 +94,17 @@ Please found in parent [README](../README.md)
 ### Walkthrough
 This design leverages step function for main business flow: 
 1. Split input into concurrency executions
-   1. Setup counter target (base on input items)
-   2. Step Function push data as event (no callback, just fire) into EventBridge
-   3. Eventbridge base on event matching (inside data field with defined policy in the target bus) invoke corresponding Lambda
-   4. Lambda processes input data
-   5. Lambda push event to event stream with different event fields to signal complete
+1.1. Setup counter target (base on input items)
+1.2. Step Function push data as event (no callback, just fire) into EventBridge
+1.3. Eventbridge base on event matching (inside data field with defined policy in the target bus) invoke corresponding Lambda
+1.4. Lambda processes input data
+1.5. Lambda push event to event stream with different event fields to signal complete
 2. Eventbridge routes the event to different step function for counter based on matching pattern
 3. EventBridge triggers another step function to handle counter logic
-   1. Incremental counter to indicate there is one item completion
-   2. Check if this is the last item to proceed to next step by checking counter and target
-   3. If matching counter target, trigger next step (as all items complete)
-4. If not reach counter target, just end step function
+3.1. Incremental counter to indicate there is one item completion
+3.2. Check if this is the last item to proceed to next step by checking counter and target
+3.3. If matching counter target, trigger next step (as all items complete)
+3.4. If not reach counter target, just end step function
 
 
 ## Advantage
