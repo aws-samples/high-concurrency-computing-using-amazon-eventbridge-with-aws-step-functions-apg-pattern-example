@@ -9,8 +9,17 @@ Please found in parent [README](../README.md)
 ## Assumptions
 Please found in parent [README](../README.md)
 
+## Target Architecture
+![architecture](images/map_iterators_within_parallel_attempt.drawio.png)
 
-## Target technology stack  
+### Walkthrough
+1. Processes the request 
+2. The outer parallel pass down each of `requestSlots[0]` to to parallel step's `slot 0` step, `requestSlots[1]` to to parallel step's `slot 1` step, and `requestSlots[2]` to parallel step's `slot 2` step
+3. Each map iterates through the items within its assigned array and invoke lambda with it.
+4. Step function will wait until all invocations are completed (all callback tokens are received) and then proceed next step
+5. Invoke next step as all invocations are completed
+
+## Technology Components
 - Data passed into step functions/computing lambda is only reference id
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback Pattern)](../multi-step-functions-eventbridge)
 <br>
@@ -36,15 +45,7 @@ Please found in parent [README](../README.md)
 Other areas are similar to [Option #3 Map Iterator within Map Iterator](step-function-map-in-map)
 
 
-## Target Architecture
-![architecture](images/map_iterators_within_parallel_attempt.drawio.png)
 
-### Walkthrough
-1. Processes the request 
-2. The outer parallel pass down each of `requestSlots[0]` to to parallel step's `slot 0` step, `requestSlots[1]` to to parallel step's `slot 1` step, and `requestSlots[2]` to parallel step's `slot 2` step
-3. Each map iterates through the items within its assigned array and invoke lambda with it.
-4. Step function will wait until all invocations are completed (all callback tokens are received) and then proceed next step
-5. Invoke next step as all invocations are completed
 
 ## Advantages
 Same as [Option #3 Map Iterator within Map Iterator](step-function-map-in-map)

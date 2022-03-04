@@ -5,12 +5,21 @@
 ## Customer Requirements
 Please found in parent [README](../README.md)
 
-
 ## Assumptions
 Please found in parent [README](../README.md)
 
+## Target Architecture
+![architecture](images/step_function_with_eventbridge_callback_attempt.drawio.png)
 
-## Target Technology Stack  
+### Walkthrough
+1. Performs concurrent invocations over an array input
+1.1. Each invocation take an item within array and push as event (+ a callback token) into event bridge and wait for callback event
+1.2. EventBridge base on pattern match route event to correct Lambda
+1.3. Lambda will process incoming event, and use token within event to notify Step Function to complete the step
+2. Step function will wait until all invocations are completed (all callback tokens are received) and then proceed next step
+3. Invoke next step as all invocations are completed
+
+## Technology Components  
 - Data passed into step functions/computing lambda is only reference id
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback Pattern)](../multi-step-functions-eventbridge)
 <br>
@@ -56,18 +65,6 @@ The difference between this design and #1 is step function's callback mechanism 
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback)](../multi-step-functions-eventbridge)
 <br>
 
-
-## Target Architecture
-![architecture](images/step_function_with_eventbridge_callback_attempt.drawio.png)
-
-
-## Walkthrough
-1. Performs concurrent invocations over an array input
-1.1. Each invocation take an item within array and push as event (+ a callback token) into event bridge and wait for callback event
-1.2. EventBridge base on pattern match route event to correct Lambda
-1.3. Lambda will process incoming event, and use token within event to notify Step Function to complete the step
-2. Step function will wait until all invocations are completed (all callback tokens are received) and then proceed next step
-3. Invoke next step as all invocations are completed
 
 ## Advantages
 - This will be the recommend approach if want to leverage Step Functions + Event Bridge but do not want to manage the global counter

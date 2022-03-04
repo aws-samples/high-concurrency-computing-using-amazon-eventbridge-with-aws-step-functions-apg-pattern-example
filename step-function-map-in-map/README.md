@@ -5,12 +5,21 @@
 ## Customer Requirement
 Please found in parent [README](../README.md)
 
-
 ## Assumptions
 Please found in parent [README](../README.md)
 
+## Target Architecture
+![architecture](images/map_iterators_within_map_iterator_attempt.drawio.png)
 
-## Target Technology Stack  
+## Walkthrough
+1. Processes the request
+2. Outer Map Iterator maps through the outer of the nested array
+3. Inter Map Iterator processes through the given inter array
+For each request, pushes to Lambda to processes the input event 
+4. Lambda processes the input event and returns completed message  
+5. Triger next step with summary info to Summary Lambda
+
+## Technology Components
 - Data passed into step functions/computing lambda is only reference id
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback Pattern)](../multi-step-functions-eventbridge)
 - This design is similar to [Option #2 Step Function Map Iterator](../step-function-map-iterator) except over how Step Function interact with invocation of computing Lambda
@@ -40,23 +49,8 @@ However, during testing, it is proved the overall result is much worse:
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback)](../multi-step-functions-eventbridge)
 <br>
 
-
-## Target Architecture
-![architecture](images/map_iterators_within_map_iterator_attempt.drawio.png)
-
-
-## Walkthrough
-1. Processes the request
-2. Outer Map Iterator maps through the outer of the nested array
-3. Inter Map Iterator processes through the given inter array
-For each request, pushes to Lambda to processes the input event 
-4. Lambda processes the input event and returns completed message  
-5. Triger next step with summary info to Summary Lambda
-
-
 ## Advantages
 - In theory, achieves more concurrency at Lambda (but please note about disadvantages)
-
 
 ## Disadvantages
 - Performance is worse than default one layer of Map Iterator ([Option #2 Step Function Map Iterator](../step-function-map-iterator), which is not even the fastest option)
@@ -64,11 +58,9 @@ For each request, pushes to Lambda to processes the input event
 - The data need to be formatted into specific format (nested array) makes the overall process much more complex to debug
 - This is the worst performances out of all approaches, and that difference is higher with more items to be processed
 
-
 ## Automation and scale
 - The deployment of this architecture if fully automated by CDK.
 - This will have performance scalability issue in larger concurrency and is not recommended as there is no direct benefit
-
 
 ## Additional Notes
 The code in code sample is acting as a high-level implementation, following should be addressed within actual implementation for production setup:

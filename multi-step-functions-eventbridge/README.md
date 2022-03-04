@@ -8,7 +8,25 @@ Please found in parent [README](../README.md)
 ## Assumptions
 Please found in parent [README](../README.md)
 
-## Target technology stack  
+## Target Architecture  
+![architecture](images/multiple_step_functions_with_eventBridge_attempt.drawio.png)
+
+### Walkthrough
+This design leverages step function for main business flow: 
+1. Split input into concurrency executions
+1.1. Setup counter target (base on input items)
+1.2. Step Function push data as event (no callback, just fire) into EventBridge
+1.3. Eventbridge base on event matching (inside data field with defined policy in the target bus) invoke corresponding Lambda
+1.4. Lambda processes input data
+1.5. Lambda push event to event stream with different event fields to signal complete
+2. Eventbridge routes the event to different step function for counter based on matching pattern
+3. EventBridge triggers another step function to handle counter logic
+3.1. Incremental counter to indicate there is one item completion
+3.2. Check if this is the last item to proceed to next step by checking counter and target
+3.3. If matching counter target, trigger next step (as all items complete)
+3.4. If not reach counter target, just end step function
+
+## Technology Components  
 - Data passed into step functions/computing lambda is only reference id
    - The actual data with reference id is in outside data source
    - Each reference id maps to one record that can be modified independently
@@ -86,38 +104,15 @@ Please found in parent [README](../README.md)
    - The AWS X-Ray is enabled within system to capture end to end flow. However, there is limitation due to service quota, detail can be found in `Additional-Notes` section
 <br>
 
-
-## Target Architecture  
-![architecture](images/multiple_step_functions_with_eventBridge_attempt.drawio.png)
-
-
-### Walkthrough
-This design leverages step function for main business flow: 
-1. Split input into concurrency executions
-1.1. Setup counter target (base on input items)
-1.2. Step Function push data as event (no callback, just fire) into EventBridge
-1.3. Eventbridge base on event matching (inside data field with defined policy in the target bus) invoke corresponding Lambda
-1.4. Lambda processes input data
-1.5. Lambda push event to event stream with different event fields to signal complete
-2. Eventbridge routes the event to different step function for counter based on matching pattern
-3. EventBridge triggers another step function to handle counter logic
-3.1. Incremental counter to indicate there is one item completion
-3.2. Check if this is the last item to proceed to next step by checking counter and target
-3.3. If matching counter target, trigger next step (as all items complete)
-3.4. If not reach counter target, just end step function
-
-
-## Advantage
+## Advantages
 - Utilize Step Function to get out of box monitor/retry logic/state machines
 - Utilize EventBridge to route to correct Lambda/Step Functions/other destinations* base on event fields instead of maintain complex data routing logic in step functions/lambdas
 - Able to push higher concurrency vs other attempts
-
 
 ## Disadvantages
 - Complex compare (such as counter with lock) to other approaches due to its distributed nature
 - Need to monitor limit around resources due to the system may able to trigger computations behind limits
 - Have overhead for short lambda executions (few seconds overhead)
-
 
 ## Automation and scale
 The deployment of this architecture if fully automated by CDK.

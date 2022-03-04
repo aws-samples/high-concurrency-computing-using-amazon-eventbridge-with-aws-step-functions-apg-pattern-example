@@ -8,8 +8,18 @@ Please found in parent [README](../README.md)
 ## Assumptions
 Please found in parent [README](../README.md)
 
+## Target Architecture
+![architecture](images/map_iterator_attempt.drawio.png)
 
-## Target technology stack  
+### Walkthrough
+1. Processes the request 
+Uses Map Iterator step to loop through each computing request
+For each computing request, pushes through Lambda and wait for its completion
+Complete the step function
+2. Lambda processes the input event and returns completed message  
+3. Triger next step with summary info to Summary Lambda
+
+## Technology Components  
 - Data passed into step functions/computing lambda is only reference id
     - Same as [Option #1 Multi - Step Function with EventBridge (No Callback Pattern)](../multi-step-functions-eventbridge)
 <br>
@@ -44,20 +54,6 @@ Please found in parent [README](../README.md)
 - AWS X-Ray
     - Same as Option [Option #1 Multi - Step Function with EventBridge (No Callback Pattern)](../multi-step-functions-eventbridge)
 <br>
-
-
-## Target Architecture
-![architecture](images/map_iterator_attempt.drawio.png)
-
-
-### Walkthrough
-1. Processes the request 
-Uses Map Iterator step to loop through each computing request
-For each computing request, pushes through Lambda and wait for its completion
-Complete the step function
-2. Lambda processes the input event and returns completed message  
-3. Triger next step with summary info to Summary Lambda
-
 
 ## Advantages
 - This will be the recommend approach if Step Functions are chosen with its known performance limit
