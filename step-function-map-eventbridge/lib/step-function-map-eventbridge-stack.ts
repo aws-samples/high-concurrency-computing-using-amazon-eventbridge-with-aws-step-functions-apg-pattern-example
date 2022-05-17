@@ -32,6 +32,22 @@ export class StepFunctionMapEventbridgeStack extends cdk.Stack {
       encryptionMasterKey: kmsKey
     });
 
+    const enforceTlsStatement = new iam.PolicyStatement({
+      sid: "Enforce TLS for all principals",
+      effect: iam.Effect.DENY,
+      principals: [
+          new iam.AnyPrincipal(),
+      ],
+      actions: [
+          "sqs:*",
+      ],
+      conditions: {
+          "Bool": {"aws:SecureTransport": false},
+      },
+    }  );
+    computingBusDLQ.addToResourcePolicy(enforceTlsStatement);
+
+
     // Enable adding suppressions to computingBusDLQ to notify CDK-NAG that 
     // This computingBusDLQ sqs queue is already a deadletter queue for eventbridge
     // bus computingBus so itself does not need another deadletter queue
@@ -66,7 +82,7 @@ export class StepFunctionMapEventbridgeStack extends cdk.Stack {
 
 
     const computingLambda = new lambda.Function(this, 'computing_lambda', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       role: computingLambdaRole,
       code: lambda.Code.fromAsset('lambda_fns'),
       handler: 'computing_lambda.lambda_handler',
@@ -109,7 +125,7 @@ export class StepFunctionMapEventbridgeStack extends cdk.Stack {
     summaryLambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSXRayDaemonWriteAccess'));
 
     const summaryLambda = new lambda.Function(this, 'summary_lambda', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       role: summaryLambdaRole,
       code: lambda.Code.fromAsset('lambda_fns'),
       handler: 'summary_lambda.lambda_handler',
