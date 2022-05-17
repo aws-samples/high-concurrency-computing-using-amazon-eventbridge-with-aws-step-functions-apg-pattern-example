@@ -31,7 +31,7 @@ export class StepFunctionMapInParallelStack extends cdk.Stack {
     computingLambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSXRayDaemonWriteAccess'));
 
     const computingLambda = new lambda.Function(this, 'computing_lambda', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       role: computingLambdaRole,
       code: lambda.Code.fromAsset('lambda_fns'),
       handler: 'computing_lambda.lambda_handler',
@@ -74,7 +74,7 @@ export class StepFunctionMapInParallelStack extends cdk.Stack {
     summaryLambdaRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AWSXRayDaemonWriteAccess'));
 
     const summaryLambda = new lambda.Function(this, 'summary_lambda', {
-      runtime: lambda.Runtime.NODEJS_14_X,
+      runtime: lambda.Runtime.NODEJS_16_X,
       role: summaryLambdaRole,
       code: lambda.Code.fromAsset('lambda_fns'),
       handler: 'summary_lambda.lambda_handler',
